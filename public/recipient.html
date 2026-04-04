@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recipient Dashboard - SaveNShare</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
+ 
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+ 
+    :root {
+      --orange: #f97316;
+      --orange-light: #fed7aa;
+      --orange-dark: #ea580c;
+      --bg: #fff7ed;
+      --card: #ffffff;
+      --text: #1c1917;
+      --muted: #78716c;
+      --border: #e7e5e4;
+      --green: #16a34a;
+      --blue: #2563eb;
+      --yellow: #d97706;
+    }
+ 
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      color: var(--text);
+    }
+ 
+    /* ─── HEADER ─── */
+    header {
+      background: linear-gradient(135deg, var(--orange), var(--orange-dark));
+      color: white;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 16px rgba(249,115,22,0.35);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-brand { display: flex; align-items: center; gap: 10px; }
+    .header-brand h1 { font-size: 20px; font-weight: 800; letter-spacing: -0.3px; }
+    .header-right { display: flex; align-items: center; gap: 10px; }
+    .stats-pill {
+      background: rgba(255,255,255,0.2);
+      border-radius: 999px;
+      padding: 6px 14px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .btn-logout {
+      background: rgba(255,255,255,0.2);
+      border: 2px solid rgba(255,255,255,0.5);
+      color: white;
+      padding: 6px 16px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.2s;
+    }
+    .btn-logout:hover { background: rgba(255,255,255,0.35); }
+ 
+    /* ─── TABS ─── */
+    .tabs {
+      display: flex;
+      gap: 0;
+      background: white;
+      border-bottom: 2px solid var(--border);
+      padding: 0 24px;
+      position: sticky;
+      top: 57px;
+      z-index: 99;
+    }
+    .tab {
+      padding: 14px 22px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--muted);
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      transition: color 0.2s, border-color 0.2s;
+      user-select: none;
+    }
+    .tab.active { color: var(--orange); border-bottom-color: var(--orange); }
+    .tab:hover:not(.active) { color: var(--text); }
+ 
+    /* ─── MAIN ─── */
+    .main {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 24px 16px;
+    }
+ 
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+ 
+    /* ─── SECTION HEADER ─── */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .section-header h2 {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--text);
+    }
+    .count-badge {
+      background: var(--orange-light);
+      color: var(--orange-dark);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 999px;
+    }
+ 
+    /* ─── DONATION CARD ─── */
+    .donation-card {
+      background: white;
+      border-radius: 16px;
+      border: 1.5px solid var(--border);
+      padding: 16px;
+      margin-bottom: 14px;
+      display: flex;
+      gap: 16px;
+      transition: box-shadow 0.2s, transform 0.2s;
+      animation: fadeUp 0.3s ease both;
+    }
+    .donation-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.08); transform: translateY(-1px); }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .donation-img {
+      width: 100px;
+      min-width: 100px;
+      height: 90px;
+      border-radius: 10px;
+      object-fit: cover;
+      background: #fef3c7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+    }
+    .donation-img img { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; }
+    .donation-body { flex: 1; }
+    .donation-title {
+      font-size: 16px;
+      font-weight: 800;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+    .donation-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .meta-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #f5f5f4;
+      border-radius: 999px;
+      padding: 3px 10px;
+      font-size: 12px;
+      color: #44403c;
+      font-weight: 600;
+    }
+    .donation-details {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 10px;
+      line-height: 1.5;
+    }
+    .btn-request {
+      background: linear-gradient(135deg, var(--orange), var(--orange-dark));
+      color: white;
+      border: none;
+      padding: 9px 20px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      box-shadow: 0 4px 12px rgba(249,115,22,0.4);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .btn-request:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(249,115,22,0.55); }
+    .btn-request:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+ 
+    /* ─── STATUS BADGE ─── */
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .status-posted   { background: #dcfce7; color: #15803d; }
+    .status-requested { background: #dbeafe; color: #1d4ed8; }
+    .status-accepted  { background: #fef3c7; color: #b45309; }
+ 
+    /* ─── MY REQUESTS CARD ─── */
+    .request-card {
+      background: white;
+      border-radius: 16px;
+      border: 1.5px solid var(--border);
+      padding: 16px;
+      margin-bottom: 14px;
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      animation: fadeUp 0.3s ease both;
+    }
+    .request-card.accepted-card { border-color: #fcd34d; background: #fffbeb; }
+    .request-info { flex: 1; }
+    .request-title { font-size: 15px; font-weight: 800; margin-bottom: 6px; }
+    .request-row { font-size: 13px; color: var(--muted); margin-bottom: 3px; }
+    .request-row strong { color: var(--text); }
+ 
+    /* ─── EMPTY STATE ─── */
+    .empty {
+      text-align: center;
+      padding: 48px 20px;
+      color: var(--muted);
+    }
+    .empty .empty-icon { font-size: 52px; margin-bottom: 10px; }
+    .empty p { font-size: 15px; }
+ 
+    /* ─── LOADING ─── */
+    .loading {
+      text-align: center;
+      padding: 32px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+ 
+    /* ─── TOAST ─── */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #1c1917;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 600;
+      z-index: 9999;
+      transition: transform 0.3s ease;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    #toast.show { transform: translateX(-50%) translateY(0); }
+    #toast.success { background: var(--green); }
+    #toast.error { background: #dc2626; }
+ 
+    @media (max-width: 600px) {
+      .header-brand h1 { font-size: 16px; }
+      .stats-pill { display: none; }
+      .donation-card { flex-direction: column; }
+      .donation-img { width: 100%; height: 160px; min-width: unset; }
+    }
+  </style>
+</head>
+<body>
+ 
+<header>
+  <div class="header-brand">
+    <span style="font-size:22px">🍲</span>
+    <h1>SaveNShare &nbsp;·&nbsp; Recipient</h1>
+  </div>
+  <div class="header-right">
+    <div class="stats-pill" id="statsDisplay">—</div>
+    <button class="btn-logout" onclick="logout()">Logout</button>
+  </div>
+</header>
+ 
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('available', this)">🍽 Available Food</div>
+  <div class="tab" onclick="switchTab('myrequests', this)">📋 My Requests</div>
+</div>
+ 
+<div class="main">
+ 
+  <!-- TAB: Available Donations -->
+  <div id="tab-available" class="tab-panel active">
+    <div class="section-header">
+      <h2>Available Donations</h2>
+      <span class="count-badge" id="availableCount">—</span>
+    </div>
+    <div id="availableDonations"><div class="loading">Loading donations…</div></div>
+  </div>
+ 
+  <!-- TAB: My Requests -->
+  <div id="tab-myrequests" class="tab-panel">
+    <div class="section-header">
+      <h2>My Requests</h2>
+      <span class="count-badge" id="requestCount">—</span>
+    </div>
+    <div id="myRequestsList"><div class="loading">Loading your requests…</div></div>
+  </div>
+ 
+</div>
+ 
+<div id="toast"></div>
+ 
+<script>
+  const token = localStorage.getItem('token');
+  if (!token) { window.location.href = 'login-recipient.html'; }
+  const headers = { 'Authorization': `Bearer ${token}` };
+ 
+  // ── TAB SWITCHING ──────────────────────────────────────────────────────────
+  function switchTab(name, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+  // Refresh data when switching tabs
+  if (name === 'myrequests') loadMyRequests();
+  if (name === 'available') loadAvailableDonations();
+}
+ 
+  // ── TOAST ──────────────────────────────────────────────────────────────────
+  function showToast(msg, type = '') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = type ? `show ${type}` : 'show';
+    setTimeout(() => { t.className = ''; }, 3000);
+  }
+ 
+  // ── STATS ──────────────────────────────────────────────────────────────────
+  async function loadStats() {
+    try {
+      const res = await fetch('/api/stats');
+      const s = await res.json();
+      document.getElementById('statsDisplay').textContent =
+        `🍱 ${s.totalDonations} donations · 🤝 ${s.totalHelped} helped`;
+    } catch {}
+  }
+ 
+  // ── AVAILABLE DONATIONS ────────────────────────────────────────────────────
+  async function loadAvailableDonations() {
+    const container = document.getElementById('availableDonations');
+    try {
+      const res = await fetch('/api/donations', { headers });
+      if (res.status === 401 || res.status === 403) {
+        localStorage.removeItem('token');
+        window.location.href = 'login-recipient.html';
+        return;
+      }
+      const donations = await res.json();
+      document.getElementById('availableCount').textContent = Array.isArray(donations) ? donations.length : 0;
+ 
+      if (!Array.isArray(donations) || donations.length === 0) {
+        container.innerHTML = `<div class="empty"><div class="empty-icon">🍽️</div><p>No donations available right now.<br>Check back soon!</p></div>`;
+        return;
+      }
+ 
+      container.innerHTML = donations.map(d => `
+        <div class="donation-card" id="card-${d.id}">
+          <div class="donation-img">
+            ${d.image
+              ? `<img src="${d.image}" alt="Food image">`
+              : '<span>🥘</span>'}
+          </div>
+          <div class="donation-body">
+            <div class="donation-title">${d.foodType || 'Food Donation'} · ${d.quantity || 'Some quantity'}</div>
+            <div class="donation-meta">
+              <span class="meta-chip">⏱ ${d.bestBeforeHours ? d.bestBeforeHours + ' hrs left' : 'Time N/A'}</span>
+              <span class="meta-chip">📍 ${d.address}</span>
+              <span class="meta-chip">📞 ${d.phone || 'No phone'}</span>
+              <span class="meta-chip">👤 ${d.donorEmail}</span>
+            </div>
+            ${d.details ? `<div class="donation-details">📝 ${d.details}</div>` : ''}
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+              <button class="btn-request" id="btn-${d.id}" onclick="requestDonation(${d.id})">
+                🍽 Request Food
+              </button>
+              <span style="font-size:12px;color:var(--muted)">
+                Posted ${d.createdAt ? new Date(d.createdAt).toLocaleString() : ''}
+              </span>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    } catch (e) {
+      container.innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><p>Error loading donations. Please refresh.</p></div>`;
+    }
+  }
+ 
+  // ── REQUEST DONATION ───────────────────────────────────────────────────────
+  // FIX: Function was named "request()" but button called "requestDonation()" — now consistent
+  async function requestDonation(id) {
+    const btn = document.getElementById('btn-' + id);
+    if (btn) { btn.disabled = true; btn.textContent = 'Requesting…'; }
+ 
+    try {
+      const res = await fetch(`/api/donations/${id}/request`, {
+        method: 'POST',
+        headers
+      });
+      const data = await res.json();
+ 
+      if (res.ok) {
+        showToast('✅ ' + (data.message || 'Request sent!'), 'success');
+        // Remove card from available list
+        const card = document.getElementById('card-' + id);
+        if (card) {
+          card.style.opacity = '0';
+          card.style.transform = 'scale(0.95)';
+          card.style.transition = 'all 0.3s';
+          setTimeout(() => { card.remove(); loadStats(); updateAvailableCount(); }, 300);
+        }
+        // Refresh my requests tab in background
+        loadMyRequests();
+      } else {
+        showToast('❌ ' + (data.error || 'Could not request'), 'error');
+        if (btn) { btn.disabled = false; btn.textContent = '🍽 Request Food'; }
+      }
+    } catch (e) {
+      showToast('❌ Network error. Please try again.', 'error');
+      if (btn) { btn.disabled = false; btn.textContent = '🍽 Request Food'; }
+    }
+  }
+ 
+  function updateAvailableCount() {
+    const cards = document.querySelectorAll('#availableDonations .donation-card');
+    document.getElementById('availableCount').textContent = cards.length;
+  }
+ 
+  // ── MY REQUESTS ────────────────────────────────────────────────────────────
+  // FIX: Now uses /api/my-requests endpoint which correctly fetches recipient's own requests
+  async function loadMyRequests() {
+    const list = document.getElementById('myRequestsList');
+    try {
+      const res = await fetch('/api/my-requests', { headers });
+      const donations = await res.json();
+      document.getElementById('requestCount').textContent = Array.isArray(donations) ? donations.length : 0;
+ 
+      if (!Array.isArray(donations) || donations.length === 0) {
+        list.innerHTML = `<div class="empty"><div class="empty-icon">📋</div><p>No requests yet.<br>Browse available food and make your first request!</p></div>`;
+        return;
+      }
+ 
+      list.innerHTML = donations.map(d => `
+        <div class="request-card ${d.status === 'accepted' ? 'accepted-card' : ''}">
+          <div class="donation-img" style="width:80px;min-width:80px;height:72px;font-size:28px;">
+            ${d.image ? `<img src="${d.image}" alt="food">` : '<span>🥘</span>'}
+          </div>
+          <div class="request-info">
+            <div class="request-title">
+              ${d.foodType || 'Food'} · ${d.quantity || '?'}
+              <span class="status-badge status-${d.status}" style="margin-left:8px;">${d.status}</span>
+            </div>
+            <div class="request-row">📍 <strong>Pickup:</strong> ${d.address}</div>
+            <div class="request-row">📞 <strong>Contact:</strong> ${d.phone || 'N/A'}</div>
+            <div class="request-row">👤 <strong>Donor:</strong> ${d.donorEmail}</div>
+            ${d.details ? `<div class="request-row">📝 ${d.details}</div>` : ''}
+            ${d.status === 'accepted'
+              ? `
+                <div style="margin-top:8px;padding:8px 12px;background:#fef9c3;border-radius:8px;font-size:13px;font-weight:700;color:#854d0e;">
+                  🎉 Accepted! Please pick up your food from the address above.
+                </div>
+                ${
+                  d.reviewRating
+                    ? `<div style="margin-top:8px;font-size:13px;color:#166534;">
+                         ⭐ You rated this donation ${d.reviewRating}/5
+                         ${d.reviewComment ? `<br>💬 "${d.reviewComment}"` : ''}
+                       </div>`
+                    : `<div style="margin-top:8px;padding:10px 12px;background:#fefce8;border-radius:10px;font-size:13px;color:#713f12;">
+                         ✨ After you receive this food, please leave a quick review:
+                         <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
+                           <select id="review-rating-${d.id}" style="padding:4px 8px;border-radius:6px;border:1px solid #e5e7eb;font-size:13px;">
+                             <option value="">Rating</option>
+                             <option value="5">5 - Excellent</option>
+                             <option value="4">4 - Good</option>
+                             <option value="3">3 - Okay</option>
+                             <option value="2">2 - Poor</option>
+                             <option value="1">1 - Bad</option>
+                           </select>
+                           <input id="review-comment-${d.id}" placeholder="Optional comment" style="flex:1;min-width:120px;padding:6px 8px;border-radius:6px;border:1px solid #e5e7eb;font-size:13px;">
+                           <button type="button" onclick="submitReview(${d.id})" style="background:#16a34a;color:white;border:none;border-radius:999px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;">
+                             Submit
+                           </button>
+                         </div>
+                       </div>`
+                }
+              `
+              : `<div style="margin-top:6px;font-size:12px;color:var(--muted);">
+                  ⏳ Waiting for donor to accept your request…
+                </div>`
+            }
+            <div style="font-size:11px;color:var(--muted);margin-top:4px;">
+              Requested on ${d.createdAt ? new Date(d.createdAt).toLocaleString() : ''}
+            </div>
+          </div>
+        </div>
+      `).join('');
+    } catch (e) {
+      list.innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><p>Error loading requests.</p></div>`;
+    }
+  }
+ 
+  function logout() {
+    localStorage.removeItem('token');
+    window.location.href = 'index.html';
+  }
+ 
+  // ── INIT ───────────────────────────────────────────────────────────────────
+  loadStats();
+  loadAvailableDonations();
+  loadMyRequests();
+
+  // ── SUBMIT REVIEW ──────────────────────────────────────────────────────────
+  async function submitReview(id) {
+    const ratingEl = document.getElementById('review-rating-' + id);
+    const commentEl = document.getElementById('review-comment-' + id);
+    const rating = ratingEl ? ratingEl.value : '';
+    const comment = commentEl ? commentEl.value.trim() : '';
+
+    if (!rating) {
+      showToast('Please select a rating first.', 'error');
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/donations/${id}/review`, {
+        method: 'POST',
+        headers: {
+          ...headers,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ rating, comment })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showToast(data.message || 'Review submitted. Thank you!', 'success');
+        // Refresh requests list to show saved review
+        loadMyRequests();
+      } else {
+        showToast(data.error || 'Could not submit review', 'error');
+      }
+    } catch (e) {
+      showToast('Network error while submitting review.', 'error');
+    }
+  }
+</script>
+</body>
+</html>
+
