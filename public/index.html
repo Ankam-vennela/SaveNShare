@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SaveNShare - End Food Waste, Feed Hunger</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
+ 
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+ 
+    body {
+      font-family: 'Nunito', sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #14532d 0%, #166534 40%, #1a7a3e 70%, #16a34a 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      padding: 20px;
+      overflow: hidden;
+      position: relative;
+    }
+ 
+    /* Decorative background circles */
+    body::before {
+      content: '';
+      position: absolute;
+      width: 500px; height: 500px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.04);
+      top: -150px; right: -150px;
+      pointer-events: none;
+    }
+    body::after {
+      content: '';
+      position: absolute;
+      width: 350px; height: 350px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.05);
+      bottom: -100px; left: -80px;
+      pointer-events: none;
+    }
+ 
+    .container {
+      text-align: center;
+      max-width: 620px;
+      width: 100%;
+      position: relative;
+      z-index: 1;
+      animation: floatIn 0.8s ease both;
+    }
+ 
+    @keyframes floatIn {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+ 
+    .logo {
+      font-size: 64px;
+      margin-bottom: 8px;
+      display: block;
+      animation: bounce 1s ease 0.8s both;
+    }
+    @keyframes bounce {
+      0%   { transform: scale(1); }
+      50%  { transform: scale(1.12); }
+      100% { transform: scale(1); }
+    }
+ 
+    h1 {
+      font-size: 3.2rem;
+      font-weight: 900;
+      letter-spacing: -1px;
+      margin-bottom: 12px;
+      text-shadow: 0 2px 12px rgba(0,0,0,0.2);
+    }
+ 
+    .tagline {
+      font-size: 1.1rem;
+      opacity: 0.88;
+      font-weight: 600;
+      margin-bottom: 36px;
+      line-height: 1.55;
+    }
+ 
+    /* Stats */
+    .stats-bar {
+      display: inline-flex;
+      gap: 0;
+      background: rgba(255,255,255,0.12);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 16px;
+      padding: 14px 28px;
+      margin-bottom: 36px;
+      font-size: 15px;
+      font-weight: 700;
+      gap: 24px;
+    }
+    .stat { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+    .stat-value { font-size: 24px; font-weight: 900; }
+    .stat-label { font-size: 11px; font-weight: 600; opacity: 0.8; text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-divider { width: 1px; background: rgba(255,255,255,0.25); align-self: stretch; }
+ 
+    /* Role cards */
+    .role-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    @media(max-width: 500px) { .role-grid { grid-template-columns: 1fr; } h1 { font-size: 2.2rem; } }
+ 
+    .role-card {
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      border: 1.5px solid rgba(255,255,255,0.2);
+      border-radius: 18px;
+      padding: 20px 16px;
+      text-align: center;
+      transition: transform 0.2s, background 0.2s;
+    }
+    .role-card:hover { transform: translateY(-3px); background: rgba(255,255,255,0.15); }
+ 
+    .role-icon { font-size: 36px; margin-bottom: 8px; display: block; }
+    .role-title { font-size: 17px; font-weight: 800; margin-bottom: 10px; }
+    .role-desc { font-size: 12px; opacity: 0.8; margin-bottom: 14px; line-height: 1.5; }
+ 
+    .btn-primary {
+      display: block;
+      padding: 10px 20px;
+      border-radius: 999px;
+      background: white;
+      color: #14532d;
+      font-weight: 800;
+      font-size: 14px;
+      text-decoration: none;
+      font-family: inherit;
+      margin-bottom: 8px;
+      transition: transform 0.15s, box-shadow 0.15s;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(0,0,0,0.2); }
+ 
+    .btn-secondary {
+      display: block;
+      padding: 8px 18px;
+      border-radius: 999px;
+      border: 1.5px solid rgba(255,255,255,0.5);
+      color: white;
+      font-weight: 700;
+      font-size: 13px;
+      text-decoration: none;
+      font-family: inherit;
+      transition: background 0.15s;
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.15); }
+ 
+    .footer-note {
+      font-size: 12px;
+      opacity: 0.6;
+      margin-top: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <span class="logo">🍽️</span>
+    <h1>SaveNShare</h1>
+    <p class="tagline">Connect food donors with people in need.<br>Post surplus food, request help, and see real impact.</p>
+ 
+    <div class="stats-bar" id="stats">
+      <div class="stat">
+        <span class="stat-value" id="totalDonations">—</span>
+        <span class="stat-label">Donations</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat">
+        <span class="stat-value" id="totalHelped">—</span>
+        <span class="stat-label">People Helped</span>
+      </div>
+    </div>
+ 
+    <div class="role-grid">
+      <!-- Donor Card -->
+      <div class="role-card">
+        <span class="role-icon">🥗</span>
+        <div class="role-title">I'm a Donor</div>
+        <div class="role-desc">Share surplus food with people who need it. Post a donation in minutes.</div>
+        <a href="login-donor.html" class="btn-primary">Login as Donor</a>
+        <a href="register-donor.html" class="btn-secondary">New? Register here</a>
+      </div>
+ 
+      <!-- Recipient Card -->
+      <div class="role-card">
+        <span class="role-icon">🍲</span>
+        <div class="role-title">I Need Food</div>
+        <div class="role-desc">Browse available donations near you and request a pickup easily.</div>
+        <a href="login-recipient.html" class="btn-primary">Login as Recipient</a>
+        <a href="register-recipient.html" class="btn-secondary">New? Register here</a>
+      </div>
+    </div>
+ 
+    <p class="footer-note">SaveNShare — reducing food waste, one meal at a time 💚</p>
+  </div>
+ 
+  <script>
+    fetch('/api/stats')
+      .then(r => r.json())
+      .then(s => {
+        document.getElementById('totalDonations').textContent = s.totalDonations || 0;
+        document.getElementById('totalHelped').textContent = s.totalHelped || 0;
+      })
+      .catch(() => {
+        document.getElementById('totalDonations').textContent = '—';
+        document.getElementById('totalHelped').textContent = '—';
+      });
+  </script>
+</body>
+</html>

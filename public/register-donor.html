@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Donor Register - SaveNShare</title>
+    <style>
+        body { font-family: Arial; background: linear-gradient(135deg, #22c55e, #16a34a); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .form-container { background: white; padding: 2rem; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); width: 100%; max-width: 400px; }
+        h2 { text-align: center; color: #16a34a; margin-bottom: 1.5rem; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #22c55e; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; margin-top: 10px; }
+        button:hover { background: #16a34a; }
+        .link { text-align: center; margin-top: 1rem; }
+        .link a { color: #22c55e; text-decoration: none; }
+        #message { margin-top: 1rem; padding: 10px; border-radius: 5px; text-align: center; }
+        .success { background: #d1fae5; color: #16a34a; }
+        .error { background: #fee2e2; color: #dc2626; }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h2>🥗 New Donor Register</h2>
+        <form id="registerForm">
+            <input type="email" id="email" placeholder="Email" required>
+            <input type="password" id="password" placeholder="Password (min 6 chars)" minlength="6" required>
+            <button type="submit">Create Account</button>
+        </form>
+        <div class="link"><a href="login-donor.html">Already have account? Login</a> | <a href="index.html">Home</a></div>
+        <div id="message"></div>
+    </div>
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const messageDiv = document.getElementById('message');
+            
+            try {
+                const res = await fetch('/api/donor/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await res.json();
+                
+                if (res.ok) {
+                    messageDiv.innerHTML = `<p class="success">${data.message}</p>`;
+                    messageDiv.innerHTML += '<p>Redirecting to login...</p>';
+                    localStorage.setItem('token', data.token);
+                    setTimeout(() => window.location.href = 'donor.html', 1500);
+                } else {
+                    messageDiv.innerHTML = `<p class="error">${data.error}</p>`;
+                }
+            } catch (err) {
+                messageDiv.innerHTML = '<p class="error">Network error. Try again.</p>';
+            }
+        });
+    </script>
+</body>
+</html>
