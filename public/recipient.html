@@ -176,6 +176,9 @@
       font-size: 12px;
       color: #44403c;
       font-weight: 600;
+      max-width: 100%;
+      white-space: normal;
+      word-break: break-word;
     }
     .donation-details {
       font-size: 13px;
@@ -212,6 +215,7 @@
     .status-posted   { background: #dcfce7; color: #15803d; }
     .status-requested { background: #dbeafe; color: #1d4ed8; }
     .status-accepted  { background: #fef3c7; color: #b45309; }
+    .status-expired   { background: #fee2e2; color: #b91c1c; }
  
     /* ─── MY REQUESTS CARD ─── */
     .request-card {
@@ -379,16 +383,19 @@
               : '<span>🥘</span>'}
           </div>
           <div class="donation-body">
-            <div class="donation-title">${d.foodType || 'Food Donation'} · ${d.quantity || 'Some quantity'}</div>
+            <div class="donation-title">
+              ${d.foodType || 'Food Donation'} · ${d.quantity || 'Some quantity'}
+              ${d.isExpired ? `<span class="status-badge status-expired" style="margin-left:8px;">expired</span>` : ''}
+            </div>
             <div class="donation-meta">
-              <span class="meta-chip">⏱ ${d.bestBeforeHours ? d.bestBeforeHours + ' hrs left' : 'Time N/A'}</span>
-              <span class="meta-chip">📍 ${d.address}</span>
-              <span class="meta-chip">📞 ${d.phone || 'No phone'}</span>
+              <span class="meta-chip">⏱ ${d.expiresAt ? ('Expires ' + new Date(d.expiresAt).toLocaleString()) : (d.bestBeforeHours ? d.bestBeforeHours + ' hrs' : 'Time N/A')}</span>
               <span class="meta-chip">👤 ${d.donorEmail}</span>
             </div>
+            <div class="donation-details">📍 <strong>Pickup:</strong> ${d.address}</div>
+            <div class="donation-details">📞 <strong>Contact:</strong> ${d.phone || 'No phone'}</div>
             ${d.details ? `<div class="donation-details">📝 ${d.details}</div>` : ''}
             <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-              <button class="btn-request" id="btn-${d.id}" onclick="requestDonation(${d.id})">
+              <button class="btn-request" id="btn-${d.id}" onclick="requestDonation(${d.id})" ${d.isExpired ? 'disabled' : ''}>
                 🍽 Request Food
               </button>
               <span style="font-size:12px;color:var(--muted)">
@@ -465,12 +472,17 @@
           <div class="request-info">
             <div class="request-title">
               ${d.foodType || 'Food'} · ${d.quantity || '?'}
-              <span class="status-badge status-${d.status}" style="margin-left:8px;">${d.status}</span>
+              <span class="status-badge status-${d.isExpired ? 'expired' : d.status}" style="margin-left:8px;">
+                ${d.isExpired ? 'expired' : d.status}
+              </span>
             </div>
             <div class="request-row">📍 <strong>Pickup:</strong> ${d.address}</div>
             <div class="request-row">📞 <strong>Contact:</strong> ${d.phone || 'N/A'}</div>
             <div class="request-row">👤 <strong>Donor:</strong> ${d.donorEmail}</div>
             ${d.details ? `<div class="request-row">📝 ${d.details}</div>` : ''}
+            ${d.isExpired ? `<div style="margin-top:8px;padding:8px 12px;background:#fee2e2;border-radius:8px;font-size:13px;font-weight:800;color:#991b1b;">
+              ⛔ This donation has expired.
+            </div>` : ''}
             ${d.status === 'accepted'
               ? `
                 <div style="margin-top:8px;padding:8px 12px;background:#fef9c3;border-radius:8px;font-size:13px;font-weight:700;color:#854d0e;">
@@ -482,7 +494,7 @@
                          ⭐ You rated this donation ${d.reviewRating}/5
                          ${d.reviewComment ? `<br>💬 "${d.reviewComment}"` : ''}
                        </div>`
-                    : `<div style="margin-top:8px;padding:10px 12px;background:#fefce8;border-radius:10px;font-size:13px;color:#713f12;">
+                    : `${d.isExpired ? '' : `<div style="margin-top:8px;padding:10px 12px;background:#fefce8;border-radius:10px;font-size:13px;color:#713f12;">
                          ✨ After you receive this food, please leave a quick review:
                          <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
                            <select id="review-rating-${d.id}" style="padding:4px 8px;border-radius:6px;border:1px solid #e5e7eb;font-size:13px;">
@@ -498,7 +510,7 @@
                              Submit
                            </button>
                          </div>
-                       </div>`
+                       </div>`}`
                 }
               `
               : `<div style="margin-top:6px;font-size:12px;color:var(--muted);">

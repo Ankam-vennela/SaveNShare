@@ -75,6 +75,22 @@ const updateStats = (type) => {
   if (type === 'donation') db.run('UPDATE stats SET totalDonations = totalDonations + 1 WHERE id=1');
   if (type === 'helped') db.run('UPDATE stats SET totalHelped = totalHelped + 1 WHERE id=1');
 };
+
+function computeExpiryInfo(donation) {
+  const best = donation && donation.bestBeforeHours != null ? parseInt(donation.bestBeforeHours, 10) : null;
+  if (!best || best <= 0 || !donation.createdAt) {
+    return { expiresAt: null, isExpired: false };
+  }
+  const createdMs = new Date(donation.createdAt).getTime();
+  if (Number.isNaN(createdMs)) return { expiresAt: null, isExpired: false };
+  const expiresMs = createdMs + best * 60 * 60 * 1000;
+  return { expiresAt: new Date(expiresMs).toISOString(), isExpired: Date.now() > expiresMs };
+}
+
+function annotateDonation(d) {
+  const { expiresAt, isExpired } = computeExpiryInfo(d);
+  return { ...d, expiresAt, isExpired };
+}
  
 // ── AUTH ROUTES ──────────────────────────────────────────────────────────────
  
@@ -174,7 +190,16 @@ app.get('/api/donations', authenticateToken, (req, res) => {
       [req.user.id],
       (err, rows) => {
         if (err) return res.status(500).json({ error: 'Error fetching donations' });
-        res.json(rows);
+        const annotated = (rows || []).map(r => {
+          const info = annotateDonation(r);
+          // Auto-mark expired in DB for posted/requested items (keeps accepted intact)
+          if (info.isExpired && (info.status === 'posted' || info.status === 'requested')) {
+            info.status = 'expired';
+            db.run('UPDATE donations SET status = "expired" WHERE id = ? AND status IN ("posted","requested")', [info.id]);
+          }
+          return info;
+        });
+        res.json(annotated);
       }
     );
   } else {
@@ -183,11 +208,12 @@ app.get('/api/donations', authenticateToken, (req, res) => {
        FROM donations d
        JOIN users u ON u.id = d.donorId
        WHERE d.status = 'posted'
+         AND (d.bestBeforeHours IS NULL OR datetime(d.createdAt, '+' || d.bestBeforeHours || ' hours') > CURRENT_TIMESTAMP)
        ORDER BY d.createdAt DESC`,
       [],
       (err, rows) => {
         if (err) return res.status(500).json({ error: 'Error fetching donations' });
-        res.json(rows);
+        res.json((rows || []).map(annotateDonation));
       }
     );
   }
@@ -205,7 +231,15 @@ app.get('/api/my-requests', authenticateToken, (req, res) => {
     [req.user.id],
     (err, rows) => {
       if (err) return res.status(500).json({ error: 'Error fetching requests' });
-      res.json(rows);
+      const annotated = (rows || []).map(r => {
+        const info = annotateDonation(r);
+        if (info.isExpired && info.status === 'requested') {
+          info.status = 'expired';
+          db.run('UPDATE donations SET status = "expired" WHERE id = ? AND status = "requested"', [info.id]);
+        }
+        return info;
+      });
+      res.json(annotated);
     }
   );
 });
@@ -213,7 +247,10 @@ app.get('/api/my-requests', authenticateToken, (req, res) => {
 // Recipient requests a donation
 app.post('/api/donations/:id/request', authenticateToken, (req, res) => {
   if (req.user.role !== 'recipient') return res.status(403).json({ error: 'Recipients only' });
-  db.get('SELECT * FROM donations WHERE id = ? AND status = "posted"', [req.params.id], (err, donation) => {
+  db.get(
+    'SELECT * FROM donations WHERE id = ? AND status = "posted" AND (bestBeforeHours IS NULL OR datetime(createdAt, \'+\' || bestBeforeHours || \' hours\') > CURRENT_TIMESTAMP)',
+    [req.params.id],
+    (err, donation) => {
     if (err) return res.status(500).json({ error: 'Server error' });
     if (!donation) return res.status(400).json({ error: 'Donation is not available' });
     db.run(
@@ -224,7 +261,7 @@ app.post('/api/donations/:id/request', authenticateToken, (req, res) => {
         res.json({ message: 'Request sent to donor!' });
       }
     );
-  });
+    });
 });
  
 // Donor accepts a request
@@ -275,7 +312,12 @@ app.get('/api/donations/:id/track', authenticateToken, (req, res) => {
     : [req.params.id, req.user.id, req.user.id];
   db.get(sql, params, (err, donation) => {
     if (!donation) return res.status(404).json({ error: 'Not found' });
-    res.json(donation);
+    const info = annotateDonation(donation);
+    if (info.isExpired && (info.status === 'posted' || info.status === 'requested')) {
+      info.status = 'expired';
+      db.run('UPDATE donations SET status = "expired" WHERE id = ? AND status IN ("posted","requested")', [info.id]);
+    }
+    res.json(info);
   });
 });
 
