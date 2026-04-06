@@ -81,7 +81,15 @@ function computeExpiryInfo(donation) {
   if (!best || best <= 0 || !donation.createdAt) {
     return { expiresAt: null, isExpired: false };
   }
-  const createdMs = new Date(donation.createdAt).getTime();
+
+  // SQLite CURRENT_TIMESTAMP is typically stored as "YYYY-MM-DD HH:MM:SS" (UTC).
+  // JS Date parsing for that format is inconsistent, so normalize it.
+  const createdAtRaw = String(donation.createdAt);
+  const sqliteTs = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/;
+  const createdMs = sqliteTs.test(createdAtRaw)
+    ? new Date(createdAtRaw.replace(' ', 'T') + 'Z').getTime()
+    : new Date(createdAtRaw).getTime();
+
   if (Number.isNaN(createdMs)) return { expiresAt: null, isExpired: false };
   const expiresMs = createdMs + best * 60 * 60 * 1000;
   return { expiresAt: new Date(expiresMs).toISOString(), isExpired: Date.now() > expiresMs };
