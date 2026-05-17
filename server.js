@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const multer = require('multer');
@@ -8,17 +10,30 @@ const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
- 
+const { initDatabase } = require('./db-init');
+
 const app = express();
+const PORT = process.env.PORT || 3000;
+const isProduction = process.env.NODE_ENV === 'production';
+const BASE_URL = (
+  process.env.APP_URL ||
+  process.env.RENDER_EXTERNAL_URL ||
+  `http://localhost:${PORT}`
+).replace(/\/$/, '');
 app.use(cors()); // Allow all origins for local dev
 app.use(bodyParser.json());
 // Serve static files from the "public" folder where HTML lives
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
  
-const upload = multer({ dest: path.join(__dirname, 'uploads') });
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+const upload = multer({ dest: uploadsDir });
 const db = new sqlite3.Database(path.join(__dirname, 'database.db'));
-const JWT_SECRET = 'savenShareSecret2026';
+const JWT_SECRET = process.env.JWT_SECRET || 'savenShareSecret2026';
  
 // Email transporter (configure with your Gmail app password)
 const nodemailer = require('nodemailer');
@@ -381,8 +396,8 @@ app.post('/api/auth/forgot-password', (req, res) => {
         [user.id, token, expiresAt],
         (err2) => {
           if (err2) return res.status(500).json({ error: 'Could not create reset token' });
-          const resetLink = `http://localhost:3000/reset-password.html?token=${token}`;
-          console.log('Password reset link (for testing):', resetLink);
+          const resetLink = `${BASE_URL}/reset-password.html?token=${token}`;
+          if (!isProduction) console.log('Password reset link (for testing):', resetLink);
           transporter.sendMail({
             to: user.email,
             subject: 'SaveNShare - Reset your password',
@@ -390,11 +405,9 @@ app.post('/api/auth/forgot-password', (req, res) => {
           }, (mailErr) => {
             if (mailErr) console.log('Email error:', mailErr.message);
           });
-          // Also return the reset link in the API response so it can be shown in the UI during local testing
-          res.json({
-            message: 'If this email exists, a reset link was sent.',
-            resetLink
-          });
+          const payload = { message: 'If this email exists, a reset link was sent.' };
+          if (!isProduction) payload.resetLink = resetLink;
+          res.json(payload);
         }
       );
     });
@@ -431,10 +444,14 @@ app.get('/api/stats', (req, res) => {
 });
  
 // ── START ─────────────────────────────────────────────────────────────────────
- 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`\n✅ SaveNShare running at http://localhost:${PORT}`);
-  console.log('📌 Run "node init-db.js" first if this is a fresh install.');
-  console.log('📧 Set EMAIL_USER and EMAIL_PASS env vars for email features.\n');
+
+initDatabase(db, () => {
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`\n✅ SaveNShare running at ${BASE_URL}`);
+    console.log(`   (listening on port ${PORT})`);
+    if (!isProduction) {
+      console.log('📌 Local dev: set APP_URL in .env if needed.');
+    }
+    console.log('📧 Set EMAIL_USER and EMAIL_PASS for password-reset emails.\n');
+  });
 });
